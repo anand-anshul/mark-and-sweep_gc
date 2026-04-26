@@ -2,12 +2,21 @@
 #include "snekobject.h"
 #include "stack.h"
 
-void vm_track_object(vm_t *vm, snek_object_t *obj) {
-  stack_push(vm->objects, obj);
-  return;
+void mark(vm_t *vm) {
+  for (size_t i = 0; i < vm->frames->count; i++) {
+    frame_t *frame = vm->frames->data[i];
+    for (size_t j = 0; j < frame->references->count; j++) {
+      snek_object_t *obj = frame->references->data[j];
+      obj->is_marked = true;
+    }
+  }
 }
 
 // don't touch below this line
+
+void frame_reference_object(frame_t *frame, snek_object_t *obj) {
+  stack_push(frame->references, obj);
+}
 
 vm_t *vm_new() {
   vm_t *vm = malloc(sizeof(vm_t));
@@ -21,11 +30,18 @@ vm_t *vm_new() {
 }
 
 void vm_free(vm_t *vm) {
+  // Free the stack frames, and then their container
   for (int i = 0; i < vm->frames->count; i++) {
     frame_free(vm->frames->data[i]);
   }
   stack_free(vm->frames);
+
+  // Free the objects, and then their container
+  for (int i = 0; i < vm->objects->count; i++) {
+    snek_object_free(vm->objects->data[i]);
+  }
   stack_free(vm->objects);
+
   free(vm);
 }
 
@@ -42,4 +58,8 @@ frame_t *vm_new_frame(vm_t *vm) {
 void frame_free(frame_t *frame) {
   stack_free(frame->references);
   free(frame);
+}
+
+void vm_track_object(vm_t *vm, snek_object_t *obj) {
+  stack_push(vm->objects, obj);
 }

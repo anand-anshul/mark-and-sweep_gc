@@ -9,11 +9,13 @@ snek_object_t *_new_snek_object(vm_t *vm) {
   if (obj == NULL) {
     return NULL;
   }
+
+  obj->is_marked = false;
+
   vm_track_object(vm, obj);
+
   return obj;
 }
-
-// don't touch below this line
 
 snek_object_t *new_snek_array(vm_t *vm, size_t size) {
   snek_object_t *obj = _new_snek_object(vm);
