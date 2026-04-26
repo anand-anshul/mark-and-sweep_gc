@@ -3,14 +3,10 @@
 #include <stdio.h>
 
 void stack_push(stack_t *stack, void *obj) {
-  assert_ptr_not_null(obj, "must not have null obj");
-
   if (stack->count == stack->capacity) {
-    // Double stack capacity to avoid reallocing often
     stack->capacity *= 2;
     stack->data = realloc(stack->data, stack->capacity * sizeof(void *));
     if (stack->data == NULL) {
-      // Unable to realloc, just exit :) get gud
       exit(1);
     }
   }
