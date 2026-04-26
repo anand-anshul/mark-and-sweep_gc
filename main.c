@@ -1,28 +1,27 @@
 #include "bootlib.h"
 #include "munit.h"
+#include "sneknew.h"
+#include "snekobject.h"
 #include "vm.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-munit_case(RUN, test_vm_new, {
+munit_case(RUN, test_new_object, {
   vm_t *vm = vm_new();
-  vm_new_frame(vm);
-  assert_int(vm->frames->count, ==, 1, "frame was pushed");
+  snek_object_t *obj = new_snek_integer(vm, 5);
+  assert_int(obj->kind, ==, INTEGER, "kind must be INTEGER");
+  assert_ptr_equal(vm->objects->data[0], obj, "object must be tracked");
+  free(obj);
   vm_free(vm);
+  assert(boot_all_freed());
 });
 
-munit_case(RUN, test_vm_new_frame, {
+munit_case(RUN, test_vm_new, {
   vm_t *vm = vm_new();
-  frame_t *frame = vm_new_frame(vm);
-  assert_ptr(frame->references, !=, NULL,
-             "frame->references must be allocated");
-  assert_int(frame->references->count, ==, 0,
-             "references stack should start empty");
-  assert(frame->references->capacity >
-         0); // references stack must have capacity > 0
-  assert_ptr(frame->references->data, !=, NULL,
-             "references stack backing array must be allocated");
+  assert_ptr_not_null(vm->frames, "frames must not be NULL");
+  assert_ptr_not_null(vm->objects, "objects must not be NULL");
   vm_free(vm);
+  assert(boot_all_freed());
 });
 
 munit_case(RUN, test_frames_are_freed, {
@@ -35,8 +34,8 @@ munit_case(RUN, test_frames_are_freed, {
 int main() {
   MunitTest tests[] = {
       munit_test("/test_vm_new", test_vm_new),
-      munit_test("/test_vm_new_frame", test_vm_new_frame),
       munit_test("/test_frames_are_freed", test_frames_are_freed),
+      munit_test("/test_new_object", test_new_object),
       munit_null_test,
   };
 
